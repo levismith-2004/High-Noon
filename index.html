@@ -2,7 +2,11 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Fault Log">
 <meta name="theme-color" content="#2A3036">
 <title>Fixture Fault Log</title>
 <style>html,body{margin:0;padding:0;background:#D9DCDE;}</style>
@@ -82,6 +86,59 @@ textarea.ffl-in{min-height:76px;resize:vertical;}
 .ffl-btn-ghost:hover{border-color:var(--ink);color:var(--ink);}
 .ffl-btn-ghost.is-danger:hover{border-color:var(--fault);color:var(--fault);}
 
+
+/* ---------- bottom tab bar (phone only) ---------- */
+.ffl-tabs{display:none;position:fixed;left:0;right:0;bottom:0;z-index:40;
+  grid-template-columns:repeat(3,1fr);background:var(--steel);
+  border-top:1px solid #3A4249;padding-bottom:env(safe-area-inset-bottom);}
+.ffl-tabs button{display:flex;align-items:center;justify-content:center;gap:6px;
+  min-height:54px;padding:14px 4px;background:none;border:0;border-top:3px solid transparent;
+  color:#9AA3A9;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;
+  letter-spacing:.12em;text-transform:uppercase;}
+.ffl-tabs button[aria-pressed="true"]{color:#fff;border-top-color:var(--amber);background:#232930;}
+.ffl-tabs i{font-style:normal;background:var(--amber);color:var(--ink);
+  font-size:10px;line-height:16px;padding:0 5px;min-width:16px;text-align:center;}
+.ffl-tabs i:empty{display:none;}
+
+/* ---------- phone layout ---------- */
+@media(max-width:899px){
+  .ffl{padding-bottom:calc(76px + env(safe-area-inset-bottom));}
+  .ffl-tabs{display:grid;}
+  .ffl-stack{display:contents;}
+  .ffl[data-tab="log"] #panelFix,.ffl[data-tab="log"] #panelHist,
+  .ffl[data-tab="fix"] #panelLog,.ffl[data-tab="fix"] #panelHist,
+  .ffl[data-tab="hist"] #panelLog,.ffl[data-tab="hist"] #panelFix{display:none;}
+
+  .ffl-head{padding:13px 14px 11px;}
+  .ffl-head-in{align-items:center;gap:10px;}
+  .ffl-title{font-size:17px;letter-spacing:.1em;}
+  .ffl-sub{font-size:10px;margin-top:4px;}
+  .ffl-stats{gap:15px;}
+  .ffl-stat-n{font-size:19px;}
+  .ffl-stat-l{font-size:9px;margin-top:3px;}
+  .ffl-body{padding:14px 12px 0;gap:14px;}
+  .ffl-card-b{padding:14px;}
+
+  /* 16px stops iOS zooming the page when a field is focused */
+  .ffl-in{font-size:16px;padding:12px 11px;}
+  .ffl-label{font-size:11px;margin-bottom:6px;}
+  textarea.ffl-in{min-height:92px;}
+  .ffl-btn{padding:16px;font-size:13px;}
+  .ffl-seg button{padding:15px 2px;font-size:11px;}
+  .ffl-btn-ghost{padding:10px 13px;font-size:11px;}
+  .ffl-chip{padding:10px 12px;font-size:12px;}
+  .ffl-count{min-width:26px;height:26px;font-size:12px;}
+  .ffl-group-h{padding:10px 11px;}
+  .ffl-entry{padding:14px 15px;}
+  .ffl-entry-text{font-size:15px;}
+  .ffl-entry-foot{gap:8px;}
+  .ffl-entry-foot .ffl-btn-ghost{flex:1;text-align:center;}
+  .ffl-toast{bottom:calc(80px + env(safe-area-inset-bottom));width:calc(100% - 32px);text-align:center;}
+}
+@media(max-width:560px){
+  .ffl-row2-stack{grid-template-columns:1fr;}
+}
+
 /* ---------- fixture groups ---------- */
 .ffl-group{border:1px solid var(--line-soft);margin-bottom:10px;}
 .ffl-group-h{display:flex;align-items:center;gap:8px;padding:8px 10px;background:#F4F5F6;border-bottom:1px solid var(--line-soft);}
@@ -127,7 +184,7 @@ textarea.ffl-in{min-height:76px;resize:vertical;}
 
 </head>
 <body>
-<div class="ffl">
+<div class="ffl" data-tab="log">
   <header class="ffl-head">
     <div class="ffl-head-in">
       <div>
@@ -146,7 +203,7 @@ textarea.ffl-in{min-height:76px;resize:vertical;}
   <div class="ffl-body">
     <!-- LEFT COLUMN -->
     <div class="ffl-stack">
-      <section class="ffl-card">
+      <section class="ffl-card" id="panelLog">
         <div class="ffl-card-h"><h2 class="ffl-card-t">Log a test</h2></div>
         <div class="ffl-card-b">
           <div class="ffl-field">
@@ -180,14 +237,14 @@ textarea.ffl-in{min-height:76px;resize:vertical;}
         </div>
       </section>
 
-      <section class="ffl-card">
+      <section class="ffl-card" id="panelFix">
         <div class="ffl-card-h">
           <h2 class="ffl-card-t">Fixtures</h2>
           <button class="ffl-btn-ghost" id="fToggle">Add new</button>
         </div>
         <div class="ffl-card-b">
           <div id="fForm" class="ffl-hide" style="border:1px solid var(--line-soft);padding:13px;margin-bottom:14px;background:#FBFBFC;">
-            <div class="ffl-row2">
+            <div class="ffl-row2 ffl-row2-stack">
               <div class="ffl-field">
                 <label class="ffl-label" for="fBrand">Brand</label>
                 <input class="ffl-in" type="text" id="fBrand" placeholder="Chauvet">
@@ -226,7 +283,7 @@ textarea.ffl-in{min-height:76px;resize:vertical;}
     </div>
 
     <!-- RIGHT COLUMN -->
-    <section class="ffl-card">
+    <section class="ffl-card" id="panelHist">
       <div class="ffl-card-h">
         <h2 class="ffl-card-t" id="logTitle">Log</h2>
         <button class="ffl-btn-ghost" id="expCsv">Export CSV</button>
@@ -241,6 +298,12 @@ textarea.ffl-in{min-height:76px;resize:vertical;}
       </div>
     </section>
   </div>
+
+  <nav class="ffl-tabs" id="tabs">
+    <button type="button" data-tab="log" aria-pressed="true">Log test</button>
+    <button type="button" data-tab="fix" aria-pressed="false">Fixtures</button>
+    <button type="button" data-tab="hist" aria-pressed="false">History<i id="tabBadge"></i></button>
+  </nav>
 
   <div class="ffl-toast" id="toast"></div>
 </div>
@@ -334,6 +397,8 @@ textarea.ffl-in{min-height:76px;resize:vertical;}
     $('statFix').textContent = state.fixtures.length;
     $('statOpen').textContent = state.entries.filter(isOpen).length;
     $('statTests').textContent = state.entries.length;
+    const badge = $('tabBadge');
+    if(badge) badge.textContent = state.entries.filter(isOpen).length || '';
 
     // group fixtures by brand + model
     groups = [];
@@ -535,6 +600,16 @@ textarea.ffl-in{min-height:76px;resize:vertical;}
       return;
     }
 
+  });
+
+  // --- phone tabs
+  const root = document.querySelector('.ffl');
+  $('tabs').addEventListener('click', ev => {
+    const b = ev.target.closest('[data-tab]');
+    if(!b) return;
+    root.dataset.tab = b.dataset.tab;
+    [...$('tabs').children].forEach(x => x.setAttribute('aria-pressed', x === b));
+    window.scrollTo(0, 0);
   });
 
   // --- CSV export
