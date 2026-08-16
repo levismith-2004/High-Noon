@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#2A3036">
+<title>Fixture Fault Log</title>
+<style>html,body{margin:0;padding:0;background:#D9DCDE;}</style>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
+
+:root{
+  --ink:#191C1F;
+  --steel:#2A3036;
+  --panel:#D9DCDE;
+  --card:#FFFFFF;
+  --line:#B9BFC4;
+  --line-soft:#E2E5E7;
+  --amber:#E8A317;
+  --fault:#B3261E;
+  --pass:#1F7A4D;
+  --muted:#6B7378;
+}
+
+.ffl *{box-sizing:border-box;}
+.ffl{
+  font-family:'IBM Plex Sans',system-ui,-apple-system,sans-serif;
+  color:var(--ink);
+  background:var(--panel);
+  min-height:100vh;
+  padding:0 0 48px;
+  line-height:1.45;
+  -webkit-font-smoothing:antialiased;
+}
+.ffl button{font-family:inherit;cursor:pointer;}
+.ffl input,.ffl select,.ffl textarea{font-family:inherit;}
+.ffl :focus-visible{outline:2px solid var(--ink);outline-offset:2px;}
+
+/* ---------- header ---------- */
+.ffl-head{background:var(--steel);color:#fff;padding:20px 20px 16px;}
+.ffl-head-in{max-width:1100px;margin:0 auto;display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;justify-content:space-between;}
+.ffl-title{font-size:26px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;margin:0;line-height:1.1;}
+.ffl-sub{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#9AA3A9;margin:6px 0 0;}
+.ffl-stats{display:flex;gap:22px;}
+.ffl-stat{text-align:right;}
+.ffl-stat-n{font-family:'IBM Plex Mono',monospace;font-size:26px;font-weight:600;line-height:1;}
+.ffl-stat-l{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#9AA3A9;margin-top:5px;}
+.ffl-stat.is-open .ffl-stat-n{color:var(--amber);}
+.ffl-stripe{height:7px;background:repeating-linear-gradient(-45deg,var(--amber) 0 12px,var(--steel) 12px 24px);}
+
+/* ---------- layout ---------- */
+.ffl-body{max-width:1100px;margin:0 auto;padding:22px 20px 0;display:grid;gap:22px;grid-template-columns:1fr;}
+@media(min-width:900px){.ffl-body{grid-template-columns:370px 1fr;align-items:start;}}
+
+.ffl-card{background:var(--card);border:1px solid var(--line);}
+.ffl-card-h{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line-soft);}
+.ffl-card-t{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;margin:0;}
+.ffl-card-b{padding:16px;}
+.ffl-stack{display:grid;gap:22px;}
+
+/* ---------- forms ---------- */
+.ffl-field{margin-bottom:13px;}
+.ffl-label{display:block;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:5px;}
+.ffl-in{width:100%;padding:9px 10px;border:1px solid var(--line);background:#FBFBFC;font-size:14px;color:var(--ink);border-radius:0;}
+.ffl-in:focus{background:#fff;border-color:var(--ink);}
+textarea.ffl-in{min-height:76px;resize:vertical;}
+.ffl-mono{font-family:'IBM Plex Mono',monospace;letter-spacing:.04em;}
+.ffl-row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+
+.ffl-seg{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--line);}
+.ffl-seg button{background:#FBFBFC;border:0;border-right:1px solid var(--line);padding:9px 2px;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);}
+.ffl-seg button:last-child{border-right:0;}
+.ffl-seg button[aria-pressed="true"]{background:var(--ink);color:#fff;}
+.ffl-seg button[aria-pressed="true"][data-sev="pass"]{background:var(--pass);}
+.ffl-seg button[aria-pressed="true"][data-sev="major"]{background:#C77A0A;}
+.ffl-seg button[aria-pressed="true"][data-sev="critical"]{background:var(--fault);}
+
+.ffl-btn{width:100%;padding:12px;background:var(--ink);color:#fff;border:0;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;}
+.ffl-btn:hover{background:#000;}
+.ffl-btn[disabled]{background:#A7ADB2;cursor:not-allowed;}
+.ffl-btn-ghost{padding:6px 10px;background:transparent;border:1px solid var(--line);font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);}
+.ffl-btn-ghost:hover{border-color:var(--ink);color:var(--ink);}
+.ffl-btn-ghost.is-danger:hover{border-color:var(--fault);color:var(--fault);}
+
+/* ---------- fixture groups ---------- */
+.ffl-group{border:1px solid var(--line-soft);margin-bottom:10px;}
+.ffl-group-h{display:flex;align-items:center;gap:8px;padding:8px 10px;background:#F4F5F6;border-bottom:1px solid var(--line-soft);}
+.ffl-group-t{flex:1;min-width:0;text-align:left;background:none;border:0;padding:0;}
+.ffl-group-t[aria-pressed="true"] .ffl-group-model{text-decoration:underline;text-decoration-color:var(--amber);text-underline-offset:3px;text-decoration-thickness:2px;}
+.ffl-group-model{display:block;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ffl-group-brand{display:block;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:2px;}
+.ffl-chips{display:flex;flex-wrap:wrap;gap:5px;padding:9px 10px;}
+.ffl-chip{display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--line);border-left:3px solid var(--line);padding:5px 8px;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;letter-spacing:.05em;color:var(--ink);}
+.ffl-chip:hover{border-color:var(--ink);}
+.ffl-chip[data-open="1"]{border-left-color:var(--amber);}
+.ffl-chip[aria-pressed="true"]{background:var(--ink);color:#fff;border-color:var(--ink);}
+.ffl-chip i{font-style:normal;font-size:10px;background:var(--amber);color:var(--ink);padding:0 5px;line-height:15px;}
+
+/* ---------- entries ---------- */
+.ffl-entry{border:1px solid var(--line);border-left:5px solid var(--muted);background:var(--card);padding:13px 15px;margin-bottom:10px;}
+.ffl-entry[data-sev="minor"]{border-left-color:var(--amber);}
+.ffl-entry[data-sev="major"]{border-left-color:#C77A0A;}
+.ffl-entry[data-sev="critical"]{border-left-color:var(--fault);}
+.ffl-entry[data-sev="pass"]{border-left-color:var(--pass);}
+.ffl-entry.is-closed{background:#F4F5F6;}
+.ffl-entry.is-closed .ffl-entry-text{color:var(--muted);}
+.ffl-entry-top{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 12px;margin-bottom:7px;}
+.ffl-entry-fix{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;letter-spacing:.05em;}
+.ffl-entry-date{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);}
+.ffl-tag{font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;padding:3px 7px;border:1px solid currentColor;}
+.ffl-tag.t-open{color:var(--fault);}
+.ffl-tag.t-fixed{color:var(--pass);}
+.ffl-tag.t-pass{color:var(--pass);}
+.ffl-entry-text{font-size:14px;white-space:pre-wrap;word-break:break-word;}
+.ffl-entry-foot{display:flex;flex-wrap:wrap;gap:7px;align-items:center;margin-top:11px;}
+.ffl-entry-by{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-right:auto;}
+
+/* ---------- misc ---------- */
+.ffl-filters{display:flex;flex-wrap:wrap;gap:7px;align-items:center;}
+.ffl-empty{border:1px dashed var(--line);padding:22px 16px;text-align:center;color:var(--muted);font-size:13px;}
+.ffl-empty strong{display:block;color:var(--ink);font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;margin-bottom:6px;}
+.ffl-toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(120%);background:var(--ink);color:#fff;padding:11px 18px;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;transition:transform .25s ease;z-index:50;}
+.ffl-toast.is-up{transform:translateX(-50%) translateY(0);}
+.ffl-hide{display:none !important;}
+@media(prefers-reduced-motion:reduce){.ffl-toast{transition:none;}}
+</style>
+
+</head>
+<body>
+<div class="ffl">
+  <header class="ffl-head">
+    <div class="ffl-head-in">
+      <div>
+        <h1 class="ffl-title">Fixture Fault Log</h1>
+        <p class="ffl-sub">Test records &amp; problem reports · <span id="syncNote">Connecting…</span></p>
+      </div>
+      <div class="ffl-stats">
+        <div class="ffl-stat"><div class="ffl-stat-n" id="statFix">0</div><div class="ffl-stat-l">Fixtures</div></div>
+        <div class="ffl-stat is-open"><div class="ffl-stat-n" id="statOpen">0</div><div class="ffl-stat-l">Open faults</div></div>
+        <div class="ffl-stat"><div class="ffl-stat-n" id="statTests">0</div><div class="ffl-stat-l">Logged</div></div>
+      </div>
+    </div>
+  </header>
+  <div class="ffl-stripe"></div>
+
+  <div class="ffl-body">
+    <!-- LEFT COLUMN -->
+    <div class="ffl-stack">
+      <section class="ffl-card">
+        <div class="ffl-card-h"><h2 class="ffl-card-t">Log a test</h2></div>
+        <div class="ffl-card-b">
+          <div class="ffl-field">
+            <label class="ffl-label" for="eFix">Fixture</label>
+            <select class="ffl-in ffl-mono" id="eFix"></select>
+          </div>
+          <div class="ffl-row2">
+            <div class="ffl-field">
+              <label class="ffl-label" for="eDate">Test date</label>
+              <input class="ffl-in ffl-mono" type="date" id="eDate">
+            </div>
+            <div class="ffl-field">
+              <label class="ffl-label" for="eBy">Tested by</label>
+              <input class="ffl-in" type="text" id="eBy" placeholder="Initials">
+            </div>
+          </div>
+          <div class="ffl-field">
+            <span class="ffl-label">Result</span>
+            <div class="ffl-seg" id="eSev">
+              <button type="button" data-sev="pass" aria-pressed="false">Pass</button>
+              <button type="button" data-sev="minor" aria-pressed="true">Minor</button>
+              <button type="button" data-sev="major" aria-pressed="false">Major</button>
+              <button type="button" data-sev="critical" aria-pressed="false">Critical</button>
+            </div>
+          </div>
+          <div class="ffl-field">
+            <label class="ffl-label" for="eProb">Problem found</label>
+            <textarea class="ffl-in" id="eProb" placeholder="What went wrong, and where on the fixture?"></textarea>
+          </div>
+          <button class="ffl-btn" id="eSave">Save entry</button>
+        </div>
+      </section>
+
+      <section class="ffl-card">
+        <div class="ffl-card-h">
+          <h2 class="ffl-card-t">Fixtures</h2>
+          <button class="ffl-btn-ghost" id="fToggle">Add new</button>
+        </div>
+        <div class="ffl-card-b">
+          <div id="fForm" class="ffl-hide" style="border:1px solid var(--line-soft);padding:13px;margin-bottom:14px;background:#FBFBFC;">
+            <div class="ffl-row2">
+              <div class="ffl-field">
+                <label class="ffl-label" for="fBrand">Brand</label>
+                <input class="ffl-in" type="text" id="fBrand" placeholder="Chauvet">
+              </div>
+              <div class="ffl-field">
+                <label class="ffl-label" for="fModel">Fixture name</label>
+                <input class="ffl-in" type="text" id="fModel" placeholder="Rogue R2 Wash">
+              </div>
+            </div>
+            <div class="ffl-row2">
+              <div class="ffl-field">
+                <label class="ffl-label" for="fId">ID prefix</label>
+                <input class="ffl-in ffl-mono" type="text" id="fId" placeholder="R2">
+              </div>
+              <div class="ffl-field">
+                <label class="ffl-label" for="fQty">How many</label>
+                <input class="ffl-in ffl-mono" type="number" id="fQty" value="1" min="1" max="200">
+              </div>
+            </div>
+            <div class="ffl-row2">
+              <div class="ffl-field">
+                <label class="ffl-label" for="fStart">Number from</label>
+                <input class="ffl-in ffl-mono" type="number" id="fStart" placeholder="1" min="0" max="999">
+              </div>
+              <div class="ffl-field">
+                <label class="ffl-label" for="fLoc">Location</label>
+                <input class="ffl-in" type="text" id="fLoc" placeholder="FOH truss">
+              </div>
+            </div>
+            <p class="ffl-mono ffl-hide" id="fPreview" style="font-size:10px;letter-spacing:.08em;color:var(--muted);margin:-4px 0 12px;"></p>
+            <button class="ffl-btn" id="fSave">Add fixtures</button>
+          </div>
+          <div id="fList"></div>
+        </div>
+      </section>
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <section class="ffl-card">
+      <div class="ffl-card-h">
+        <h2 class="ffl-card-t" id="logTitle">Log</h2>
+        <button class="ffl-btn-ghost" id="expCsv">Export CSV</button>
+      </div>
+      <div class="ffl-card-b">
+        <div class="ffl-filters" style="margin-bottom:14px;">
+          <button class="ffl-btn-ghost" data-filter="all" id="fltAll">All</button>
+          <button class="ffl-btn-ghost" data-filter="open" id="fltOpen">Open only</button>
+          <span id="fixFilterNote" class="ffl-mono ffl-hide" style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);"></span>
+        </div>
+        <div id="eList"></div>
+      </div>
+    </section>
+  </div>
+
+  <div class="ffl-toast" id="toast"></div>
+</div>
+
+<script>
+(function(){
+  let state = { fixtures: [], entries: [] };
+  let sev = 'minor';
+  let filter = 'all';
+  let fixFilter = null;   // {kind:'unit'|'type', val}
+  let groups = [];
+
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+
+  function toast(msg){
+    const t = $('toast');
+    t.textContent = msg;
+    t.classList.add('is-up');
+    clearTimeout(t._t);
+    t._t = setTimeout(() => t.classList.remove('is-up'), 2200);
+  }
+
+  let passcode = '';
+  try { passcode = localStorage.getItem('ffl-pass') || ''; } catch(e){}
+
+  async function req(method, url, body){
+    const r = await fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json', 'x-passcode': passcode },
+      body: body ? JSON.stringify(body) : undefined
+    });
+    if(r.status === 401){ askPasscode(); throw new Error('locked'); }
+    const j = await r.json().catch(() => ({ error: 'Server sent a bad response' }));
+    if(!r.ok || j.error) throw new Error(j.error || 'Could not reach the server');
+    return j;
+  }
+
+  function askPasscode(){
+    const pc = prompt('Enter the log passcode:');
+    if(pc){
+      passcode = pc.trim();
+      try { localStorage.setItem('ffl-pass', passcode); } catch(e){}
+      refresh();
+    } else {
+      setSync('Locked');
+    }
+  }
+
+  function setSync(txt){ const n = $('syncNote'); if(n) n.textContent = txt; }
+
+  function setState(s){
+    state.fixtures = (Array.isArray(s.fixtures) ? s.fixtures : []).map(f => ({ brand:'', model:'', ...f }));
+    state.entries = Array.isArray(s.entries) ? s.entries : [];
+  }
+
+  async function refresh(){
+    try {
+      setState(await req('GET', '/api/state'));
+      render();
+      setSync('Synced ' + new Date().toTimeString().slice(0, 5));
+    } catch(e){
+      if(e.message !== 'locked') setSync('Offline — changes not saved');
+    }
+  }
+
+  async function mutate(m, okMsg){
+    try {
+      setState(await req('POST', '/api/mutate', m));
+      render();
+      setSync('Synced ' + new Date().toTimeString().slice(0, 5));
+      if(okMsg) toast(okMsg);
+      return true;
+    } catch(e){
+      if(e.message !== 'locked') toast(e.message);
+      return false;
+    }
+  }
+
+  const fmtDate = d => {
+    const p = String(d || '').split('-');
+    return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : (d || '');
+  };
+  const typeKey = f => (f.brand || '').trim().toLowerCase() + '|' + (f.model || '').trim().toLowerCase();
+  const typeLabel = g => [g.brand, g.model].filter(Boolean).join(' ') || 'Unnamed fixture';
+  const isOpen = e => e.severity !== 'pass' && e.status === 'open';
+  const openCount = fid => state.entries.filter(e => e.fixtureId === fid && isOpen(e)).length;
+
+  function render(){
+    $('statFix').textContent = state.fixtures.length;
+    $('statOpen').textContent = state.entries.filter(isOpen).length;
+    $('statTests').textContent = state.entries.length;
+
+    // group fixtures by brand + model
+    groups = [];
+    state.fixtures.forEach(f => {
+      const key = typeKey(f);
+      let g = groups.find(x => x.key === key);
+      if(!g){ groups.push(g = { key, brand: f.brand || '', model: f.model || '', units: [] }); }
+      g.units.push(f);
+    });
+
+    // fixture dropdown
+    const sel = $('eFix'), keep = sel.value;
+    sel.innerHTML = state.fixtures.length
+      ? groups.map(g => '<optgroup label="' + esc(typeLabel(g)) + '">' +
+          g.units.map(f => '<option value="' + f.id + '">' + esc(f.code) + '</option>').join('') + '</optgroup>').join('')
+      : '<option value="">Add a fixture first</option>';
+    if(keep && state.fixtures.some(f => f.id === keep)) sel.value = keep;
+    $('eSave').disabled = state.fixtures.length === 0;
+
+    // fixture list, grouped by type
+    $('fList').innerHTML = state.fixtures.length ? groups.map((g, gi) => {
+      const gOpen = g.units.reduce((n, f) => n + openCount(f.id), 0);
+      const on = fixFilter && fixFilter.kind === 'type' && fixFilter.val === g.key;
+      return '<div class="ffl-group">' +
+        '<div class="ffl-group-h">' +
+          '<button class="ffl-group-t" data-gi="' + gi + '" aria-pressed="' + on + '">' +
+            '<span class="ffl-group-model">' + esc(g.model || 'Unnamed fixture') + '</span>' +
+            '<span class="ffl-group-brand">' + esc(g.brand || 'No brand') + ' · ' + g.units.length + ' unit' + (g.units.length > 1 ? 's' : '') + '</span>' +
+          '</button>' +
+          '<span class="ffl-count' + (gOpen ? '' : ' is-clear') + '">' + (gOpen || '—') + '</span>' +
+          '<button class="ffl-btn-ghost is-danger" data-delgroup="' + gi + '" title="Remove this fixture type">Remove</button>' +
+        '</div>' +
+        '<div class="ffl-chips">' + g.units.map(f => {
+          const n = openCount(f.id);
+          const sel = fixFilter && fixFilter.kind === 'unit' && fixFilter.val === f.id;
+          return '<button class="ffl-chip" data-fix="' + f.id + '" data-open="' + (n ? 1 : 0) + '" aria-pressed="' + sel + '" title="' +
+            esc([f.location, n + ' open'].filter(Boolean).join(' · ')) + '">' + esc(f.code) + (n ? '<i>' + n + '</i>' : '') + '</button>';
+        }).join('') + '</div></div>';
+    }).join('')
+      : '<div class="ffl-empty"><strong>No fixtures yet</strong>Add one to start logging tests against it.</div>';
+
+    // entries
+    let rows = state.entries.slice().sort((a, b) => (b.date || '').localeCompare(a.date || '') || b.created - a.created);
+    if(fixFilter && fixFilter.kind === 'unit') rows = rows.filter(e => e.fixtureId === fixFilter.val);
+    if(fixFilter && fixFilter.kind === 'type'){
+      const ids = state.fixtures.filter(f => typeKey(f) === fixFilter.val).map(f => f.id);
+      rows = rows.filter(e => ids.indexOf(e.fixtureId) > -1);
+    }
+    if(filter === 'open') rows = rows.filter(isOpen);
+
+    const fixOf = id => state.fixtures.find(f => f.id === id);
+    const label = { pass:'Pass', minor:'Minor', major:'Major', critical:'Critical' };
+
+    $('eList').innerHTML = rows.length ? rows.map(e => {
+      const f = fixOf(e.fixtureId);
+      const closed = !isOpen(e);
+      const tag = e.severity === 'pass'
+        ? '<span class="ffl-tag t-pass">Pass</span>'
+        : (e.status === 'open' ? '<span class="ffl-tag t-open">Open</span>' : '<span class="ffl-tag t-fixed">Fixed</span>');
+      return '<article class="ffl-entry' + (closed ? ' is-closed' : '') + '" data-sev="' + e.severity + '">' +
+        '<div class="ffl-entry-top">' +
+          '<span class="ffl-entry-fix">' + esc(f ? f.code : 'Deleted fixture') + '</span>' +
+          (f && (f.brand || f.model) ? '<span class="ffl-entry-date">' + esc([f.brand, f.model].filter(Boolean).join(' ')) + '</span>' : '') +
+          '<span class="ffl-entry-date">' + fmtDate(e.date) + '</span>' + tag +
+          (e.severity !== 'pass' ? '<span class="ffl-entry-date">' + label[e.severity] + '</span>' : '') +
+        '</div>' +
+        '<div class="ffl-entry-text">' + esc(e.problem || 'No problems recorded.') + '</div>' +
+        '<div class="ffl-entry-foot">' +
+          '<span class="ffl-entry-by">' + (e.by ? 'By ' + esc(e.by) : '') + '</span>' +
+          (e.severity !== 'pass' ? '<button class="ffl-btn-ghost" data-toggle="' + e.id + '">' + (e.status === 'open' ? 'Mark fixed' : 'Reopen') + '</button>' : '') +
+          '<button class="ffl-btn-ghost is-danger" data-del="' + e.id + '">Delete</button>' +
+        '</div></article>';
+    }).join('') : '<div class="ffl-empty"><strong>Nothing here</strong>' +
+        (state.entries.length ? 'No entries match the current filter.' : 'Saved entries will appear here, newest first.') + '</div>';
+
+    $('fltAll').style.borderColor = filter === 'all' ? 'var(--ink)' : 'var(--line)';
+    $('fltAll').style.color = filter === 'all' ? 'var(--ink)' : 'var(--muted)';
+    $('fltOpen').style.borderColor = filter === 'open' ? 'var(--ink)' : 'var(--line)';
+    $('fltOpen').style.color = filter === 'open' ? 'var(--ink)' : 'var(--muted)';
+
+    const note = $('fixFilterNote');
+    if(fixFilter){
+      let name = '?';
+      if(fixFilter.kind === 'unit'){ const f = fixOf(fixFilter.val); name = f ? f.code : '?'; }
+      else { const g = groups.find(x => x.key === fixFilter.val); name = g ? typeLabel(g) : '?'; }
+      note.classList.remove('ffl-hide');
+      note.innerHTML = 'Filtered: ' + esc(name) + ' &nbsp;<a href="#" id="clrFix" style="color:var(--fault);">clear</a>';
+    } else note.classList.add('ffl-hide');
+  }
+
+  // --- severity picker
+  $('eSev').addEventListener('click', ev => {
+    const b = ev.target.closest('button[data-sev]');
+    if(!b) return;
+    sev = b.dataset.sev;
+    [...$('eSev').children].forEach(x => x.setAttribute('aria-pressed', x === b));
+    $('eProb').placeholder = sev === 'pass' ? 'Optional notes on the test' : 'What went wrong, and where on the fixture?';
+  });
+
+  // --- add fixture
+  $('fToggle').addEventListener('click', () => {
+    const f = $('fForm');
+    f.classList.toggle('ffl-hide');
+    $('fToggle').textContent = f.classList.contains('ffl-hide') ? 'Add new' : 'Close';
+    if(!f.classList.contains('ffl-hide')) $('fId').focus();
+  });
+
+  function plannedCodes(){
+    const prefix = $('fId').value.trim();
+    const qty = Math.min(200, Math.max(1, parseInt($('fQty').value, 10) || 1));
+    const startRaw = $('fStart').value.trim();
+    const start = startRaw === '' ? 1 : parseInt(startRaw, 10) || 0;
+    if(!prefix) return [];
+    if(qty === 1 && startRaw === '') return [prefix];
+    const pad = String(start + qty - 1).length < 2 ? 2 : String(start + qty - 1).length;
+    const out = [];
+    for(let i = 0; i < qty; i++) out.push(prefix + '-' + String(start + i).padStart(pad, '0'));
+    return out;
+  }
+
+  function previewCodes(){
+    const c = plannedCodes(), p = $('fPreview');
+    if(!c.length){ p.classList.add('ffl-hide'); return; }
+    p.classList.remove('ffl-hide');
+    p.textContent = c.length > 3
+      ? 'Creates ' + c.length + ': ' + c[0] + ' … ' + c[c.length - 1]
+      : 'Creates: ' + c.join(', ');
+  }
+  ['fId','fQty','fStart'].forEach(id => $(id).addEventListener('input', previewCodes));
+
+  $('fSave').addEventListener('click', async () => {
+    const codes = plannedCodes();
+    if(!codes.length){ $('fId').focus(); toast('Enter an ID prefix'); return; }
+    const brand = $('fBrand').value.trim(), model = $('fModel').value.trim(), location = $('fLoc').value.trim();
+    const taken = codes.filter(c => state.fixtures.some(f => f.code.toLowerCase() === c.toLowerCase()));
+    if(taken.length){ toast('Already used: ' + taken.slice(0, 3).join(', ')); return; }
+    const fixtures = codes.map(code => ({ id: uid(), code, brand, model, location, created: Date.now() }));
+    const ok = await mutate({ type: 'addFixtures', fixtures },
+      codes.length > 1 ? codes.length + ' units added' : 'Fixture added');
+    if(ok){
+      $('fId').value = $('fLoc').value = $('fStart').value = '';
+      $('fQty').value = 1;
+      previewCodes();
+    }
+  });
+
+  // --- save entry
+  $('eSave').addEventListener('click', async () => {
+    const fixtureId = $('eFix').value;
+    const problem = $('eProb').value.trim();
+    if(!fixtureId){ toast('Add a fixture first'); return; }
+    if(sev !== 'pass' && !problem){ $('eProb').focus(); toast('Describe the problem'); return; }
+    const entry = {
+      id: uid(), fixtureId, date: $('eDate').value || new Date().toISOString().slice(0, 10),
+      severity: sev, problem, by: $('eBy').value.trim(),
+      status: sev === 'pass' ? 'closed' : 'open', created: Date.now()
+    };
+    if(await mutate({ type: 'addEntry', entry }, 'Entry saved')) $('eProb').value = '';
+  });
+
+  // --- list actions
+  document.addEventListener('click', async ev => {
+    const chip = ev.target.closest('[data-fix]');
+    if(chip){
+      const v = chip.dataset.fix;
+      fixFilter = (fixFilter && fixFilter.kind === 'unit' && fixFilter.val === v) ? null : { kind: 'unit', val: v };
+      render(); return;
+    }
+
+    const gBtn = ev.target.closest('[data-gi]');
+    if(gBtn){
+      const g = groups[+gBtn.dataset.gi];
+      if(g) fixFilter = (fixFilter && fixFilter.kind === 'type' && fixFilter.val === g.key) ? null : { kind: 'type', val: g.key };
+      render(); return;
+    }
+
+    const gDel = ev.target.closest('[data-delgroup]');
+    if(gDel){
+      const g = groups[+gDel.dataset.delgroup];
+      if(!g) return;
+      if(!confirm('Remove ' + typeLabel(g) + ' (' + g.units.length + ' unit' + (g.units.length > 1 ? 's' : '') + ') and all its entries?')) return;
+      fixFilter = null;
+      await mutate({ type: 'deleteFixtures', ids: g.units.map(f => f.id) }, 'Removed');
+      return;
+    }
+
+    if(ev.target.id === 'clrFix'){ ev.preventDefault(); fixFilter = null; render(); return; }
+
+    const flt = ev.target.closest('[data-filter]');
+    if(flt){ filter = flt.dataset.filter; render(); return; }
+
+    const tog = ev.target.closest('[data-toggle]');
+    if(tog){ await mutate({ type: 'toggleEntry', id: tog.dataset.toggle }); return; }
+
+    const del = ev.target.closest('[data-del]');
+    if(del){
+      if(!confirm('Delete this entry?')) return;
+      await mutate({ type: 'deleteEntry', id: del.dataset.del }, 'Entry deleted');
+      return;
+    }
+
+  });
+
+  // --- CSV export
+  $('expCsv').addEventListener('click', () => {
+    if(!state.entries.length){ toast('Nothing to export yet'); return; }
+    const q = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+    const rows = [['Unit ID','Brand','Fixture name','Location','Test date','Result','Status','Problem','Tested by']];
+    state.entries.slice().sort((a, b) => (a.date || '').localeCompare(b.date || '')).forEach(e => {
+      const f = state.fixtures.find(x => x.id === e.fixtureId) || {};
+      rows.push([f.code || '', f.brand || '', f.model || '', f.location || '', e.date, e.severity, e.status, e.problem, e.by]);
+    });
+    const csv = rows.map(r => r.map(q).join(',')).join('\r\n');
+    try {
+      const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+      const a = document.createElement('a');
+      a.href = url; a.download = 'fixture-log.csv'; a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      toast('CSV downloaded');
+    } catch(err){
+      const w = window.open('');
+      if(w) w.document.write('<pre>' + esc(csv) + '</pre>');
+      else toast('Download blocked by browser');
+    }
+  });
+
+  // --- init
+  $('eDate').value = new Date().toISOString().slice(0, 10);
+  render();
+  refresh();
+  setInterval(refresh, 20000);
+  document.addEventListener('visibilitychange', () => { if(!document.hidden) refresh(); });
+})();
+</script>
+
+</body>
+</html>
