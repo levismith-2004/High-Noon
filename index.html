@@ -70,6 +70,9 @@
 textarea.ffl-in{min-height:76px;resize:vertical;}
 .ffl-mono{font-family:'IBM Plex Mono',monospace;letter-spacing:.04em;}
 .ffl-row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.ffl-row2 > *{min-width:0;}
+.ffl-in{max-width:100%;}
+input[type="date"].ffl-in{-webkit-appearance:none;appearance:none;height:auto;}
 
 .ffl-seg{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--line);}
 .ffl-seg button{background:#FBFBFC;border:0;border-right:1px solid var(--line);padding:9px 2px;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);}
@@ -136,7 +139,7 @@ textarea.ffl-in{min-height:76px;resize:vertical;}
   .ffl-toast{bottom:calc(80px + env(safe-area-inset-bottom));width:calc(100% - 32px);text-align:center;}
 }
 @media(max-width:560px){
-  .ffl-row2-stack{grid-template-columns:1fr;}
+  .ffl-row2{grid-template-columns:1fr;}
 }
 
 /* ---------- fixture groups ---------- */
